@@ -221,4 +221,4 @@ tags (`query_label`) provided by the Query heuristic from the paper. The
 first is the label **without** using the rule to flip the label, the second
 **with** the label flipped if necessary. Finally, the original Query hit
 tweets (that were removed from the final train and test data) are listed under
-`filtered`. 
+`filtered`.
