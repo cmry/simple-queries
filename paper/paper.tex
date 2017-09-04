@@ -1,0 +1,389 @@
+\documentclass[11pt,letterpaper]{article}
+\usepackage{emnlp2017}
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage{multirow}
+\usepackage{todonotes}
+\usepackage{url}
+\usepackage{graphicx}
+\usepackage{soul}
+\usepackage{nth}
+\hyphenation{Ver-hoe-ven}
+\setul{1pt}{.4pt}
+
+\usepackage[utf8]{inputenc}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.13}
+
+\emnlpfinalcopy
+
+\newcommand\BibTeX{B{\sc ib}\TeX}
+
+
+\title{Simple Queries as Distant Labels for Predicting Gender on Twitter}
+
+\author{Chris Emmery$^{1,2}$ \and Grzegorz Chrupa\l{}a$^{1}$ \and Walter Daelemans$^{2}$ \\
+        $^{1}$TiCC, Tilburg University, 5000 LE Tilburg, The Netherlands \\
+        $^{2}$CLiPS, University of Antwerp, Prinsstraat 13, B-2000 Antwerpen, Belgium \\
+        {\tt \{c.d.emmery, g.a.chrupala\}@uvt.nl} \\
+        {\tt walter.daelemans@uantwerpen.be} \\
+        }
+
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+	The majority of research on extracting missing user attributes from
+	social media profiles use costly hand-annotated labels for
+	supervised learning. Distantly supervised methods exist, although these
+	generally rely on knowledge gathered using external sources. This paper
+	demonstrates the effectiveness of gathering distant labels for self-reported
+  gender on Twitter using simple queries. We confirm the reliability of this
+  query heuristic by comparing with manual annotation. Moreover, using these
+  labels for distant supervision, we demonstrate
+	competitive model performance on the same data as models trained on manual
+	annotations. As such, we offer a cheap, extensible, and fast alternative that
+	can be employed beyond the task of gender classification.
+\end{abstract}
+
+
+\section{Introduction}
+
+The popularity of social media that rely on rich self-representation of users
+(e.g.\ Facebook, LinkedIn) make them a valuable resource for conducting
+research based on demographic information. However, the volume of personal
+information users provide on such platforms is generally restricted to their
+personal connections only, and therefore off-limits for scientific research.
+Twitter, on the other hand, allows only a restricted amount of structured
+personal information by design. As a result, their users tend to connect with
+people outside of their social circle more frequently, making many profiles and
+communication publicly accessible. A wide variety of research has long picked
+up on the interesting characteristics of this micro-blogging service, which is
+well facilitated by the Twitter REST API.
+
+The applied Natural Language Processing (NLP) domain of author profiling aims
+to infer unknown user attributes, and is therefore broadly used to compensate for the
+lack thereof on Twitter. While previous research has already proven to be quite
+effective at this task using predictive models trained on manual annotations,
+the process of hand-labelling profiles is costly. Even for the ostensibly
+straight-forward task of annotating gender, a large portion of Twitter users
+purposefully avoids providing simple indicators such as real names or profile
+photos including a face.
+Consequently, this forces annotators to either dive deep into the user's
+timeline in search for linguistic cues, or to make decisions based on some
+personal interpretation, for which they have shown to often incorrectly apply
+stereotypical biases \cite{nguyen2014gender,flekova2016analyzing}.
+
+We show that running a small collection of ad-hoc queries for self-reports of
+gender once (``I'm a male, female, man, woman'' etc.) --- provides distant labels
+for 6,610 profiles with high confidence in one week worth of data. Employing
+these for distant supervision, we demonstrate them to be an accurate signal for
+gender classification, and form a reliable, cheap method that has competitive
+performance with models trained on costly human-labelled profiles. Our
+contributions are as follows:
+
+\begin{itemize}
+	\item We demonstrate a simple, extensible method for gathering self-reports
+	      on Twitter, that competes with expensive manual annotation.
+	\item We publish the IDs, manual annotations, as well as the distant labels
+	      for 6.6K Twitter profiles, spanning 16.8M tweets.
+\end{itemize}
+
+\noindent
+The data, labels, and our code to collect more data and reproduce the experiments
+is made available open-source at \url{https://github.com/cmry/simple-queries}.
+
+\section{Related Work} \label{sec:prev}
+
+Author profiling applies machine learning to linguistic features within a piece
+of writing to make inferences regarding its author.
+The ability to make such inferences was first discussed for gender by
+\newcite{koppel2002}, and initially applied to blogs
+\cite{argamon2007,rosenthal2011,nguyen2011}. Later, the work extended to
+social media --- encompassing a wide variety of attributes such as gender, age,
+personality, location, education, income, religion, and political polarity
+\cite{eisenstein2011,alowibdi2013,volkova2014,plank2015,volkova2016}.
+Apart from relevancy in marketing, security and forensics, author profiling
+has shown to positively influence several text classification tasks
+\cite{hovy2015}.
+
+Gender profiling research on Twitter generally takes a data-driven,
+open-vocabulary approach using bag of words, or bag of $n$-gram
+features \cite{alowibdi2013,ciot2013,verhoeven2016}, applying supervised
+classification using manually annotated profiles. However, distant supervision
+has as of yet only looked at non-textual cues for this task, unlike for example
+age, personality, and mental health
+\cite[e.g.][]{al2012homophily,plank2015,coppersmith2015}.
+For gender, \newcite{burger2011} and \newcite{li2014} collect links to external
+profiles, whereas \newcite{al2012homophily} and \newcite{li2015} use a list with
+gender-associated names. Both of these approaches rely on continuous monitoring
+of streaming data, and utilize indicators that are typically easy cues for
+annotators, thereby omitting profiles that would be costly to annotate. In
+contrast, our method only has to be repeated once a week, and includes a
+different set of users where sampling is not influenced by external resources.
+
+\section{Data Collection}
+
+To empirically compare distant labels (i.e.\ obtained using heuristics) with
+manual annotations, we require both data containing self-reports, and corpora
+with hand-labelled Twitter profiles for comparison.
+
+\paragraph{Distant Labels}
+
+The profiles in our corpus were collected on March 6\textsuperscript{th}, 2017
+--- using the Twitter
+Search API\footnote{\url{https://dev.twitter.com/rest/public/search}} to
+query for messages self-reporting gender: e.g.\ \texttt{\{I' / I a\}m a \{man,
+	woman, male, female, boy, girl, guy, dude, gal\}}. For each retrieved
+tweet, the timeline of the associated author was collected (up to 3,200 tweets)
+between Match 6\textsuperscript{th} and 8\textsuperscript{th}. Note that the
+maximum retrieval history for the Search API is limited to tweets
+from the past week. Hence, our set of queries collected 19,307 profiles spanning
+results for one week only.
+
+This method has some inherent advantages in addition to the ones mentioned in
+Section~\ref{sec:prev}: it guarantees to a large extent that
+the profiles gathered are primarily English (95\% of all associated tweets),
+collects data from active users (average of 2,500 tweets per timeline),
+and generally avoids bots, or other spam profiles
+(0,2\%\footnote{Bots were identified during annotation.} of all profiles).
+Finally, with gender profiling being considered a binary male/female classification task
+for much of the previous research and corpora, it also prevents including
+users that might not identify with the binary framework in which gender is
+typically cast.\footnote{Accordingly, this method could be applied in future
+research tackling this long-standing issue by collecting and using self-reported
+non-binary representations of gender.}
+
+\paragraph{Manual Evaluation}
+
+\begin{table}
+	\centering
+	\begin{tabular}{|p{3cm}|r|rr|}
+		\hline
+		\textbf{filter}  & \textbf{$N$ hand} & \textbf{F} & \textbf{F+R}  \\
+		\hline
+		{\tt none}       & 1,456             & .806       & .806          \\
+		{\tt rt}         & 1,109             & .873       & .887          \\
+		{\tt rt + "}     & 1,059             & .882       & .896          \\
+		{\tt rt + :}     & 1,091             & .887       & .891          \\
+		{\tt rt + " + :} & 1,045             & .885       & .\textbf{900} \\
+		\hline
+	\end{tabular}
+	\caption{Several filter rules applied to the distant labels (effectively
+		removing those matching the rules), their impact on both data
+		reduction ($N$ hand-labelled) and agreement increase. Agreement is
+		specified for: only
+		applying these filters (F), and in combination with the rules
+		from Table~\ref{tab:rul} (F+R), and reflects the amount of
+	correct distant labels compared to the manual labels.}
+	\label{tab:filt}
+\end{table}
+
+To evaluate the accuracy of our distant labels, a random sub-sample was manually
+labelled for gender by two annotators using a full profile view ($\kappa=0.78$),
+resulting in 1,456 agreed on labels. Based on the
+initial results (see Table~\ref{tab:filt}), several rules were constructed
+to filter (thereby removing) any profiles the query tweet matched to. First,
+we observed that many tweets (31\%) contained {\tt rt} --- indicating a retweet.
+Similar to tweets containing quotes (5\%), or colons (2\%), these are generally
+not self-reports (e.g.\ \ul{\tt "}random guy\ul{:} I'm a man\ldots
+\ul{\tt "}), and were therefore removed. Overall, the filters increased
+agreement with our manual annotations, simultaneously causing a decrease to
+6,610 profiles. This method however ensures a high accuracy of the distant
+labels, which should outweigh the amount of data.
+
+\begin{table}
+	\centering
+	\begin{tabular}{|l|p{5cm}|}
+		\hline
+		\textbf{Location} & \textbf{Rule set}                                      \\
+		\hline
+		anywhere          & according to, deep down                                \\
+		before query      & feel like, where, (as) if, hoping, assume(s/d) (that),
+		think, expect (that), then, (that) means,
+		implying, guess, think(s), tells me \\
+		\hline
+	\end{tabular}
+	\caption{Rules applied to the distant labels to flip the assumed gender.
+		Their location can be \emph{anywhere} in the tweet, or right \emph{before}
+		the \emph{query} (e.g.\ ``Sometimes I \ul{think} I'm a girl'').}
+	\label{tab:rul}
+\end{table}
+
+In addition to these filters, several rules were constructed to deal with
+linguistic cues that make it highly likely for the gender to be the opposite of
+the literal report (see Table~\ref{tab:rul}) --- thus indicating the label
+should be flipped. Examples include ``\ul{according to} the
+Internet, I'm a girl'', and ``Don't just \ul{assume} I'm a guy''. For
+a detailed overview of their effect
+on the overall agreement, see F+R in Table~\ref{tab:filt}. The ad-hoc list presented
+here improved agreement about .015. Note that despite being
+constructed by manual inspection of the mismatches between annotations and
+the distant labels, our filters, rules, and even the initial query can be
+extended with some creativity.
+
+\paragraph{Preparation}
+
+To compare our distant labels to annotated alternatives, we include
+\newcite{volkova2014}'s crowd-sourced corpus, and the manually labelled
+corpus by \newcite{plank2015}. Henceforth, these
+external corpora will be referred to as Volkova and Plank respectively.
+The timelines of their provided user IDs where gathered between April
+1\textsuperscript{st} and 7\textsuperscript{th} 2017
+(see Table~\ref{tab:dat} for further details on their sizes).
+
+The timelines for all corpora---including our Query corpus---were divided in
+batches of 200 tweets, as most related work follows this setup. Afterwards,
+each batch is provided with either a distant, or manual label, depending on the set of
+origin. This implies that users with less than 200 tweets were excluded, as
+well as any consecutive tweets that would not exactly fit into a batch of 200. The
+corpora were divided between a (gender stratified) train and a test set by user ID. This
+guarantees that there is no bleed of batches from any user between any of the
+splits (refer to Table~\ref{tab:dat} for the final split sizes). Other than
+tokenisation using {\tt spaCy} \cite{honnibal2015}, no special preprocessing
+steps were taken. We removed primarily non-English batches using
+\texttt{langdetect}\footnote{\url{https://github.com/Mimino666/langdetect}}
+\cite{shuyo2010}, as well as the original query tweets containing self-reports.
+The latter was done to avoid our queries being most characteristic for some batches.
+
+\begin{table}
+	\centering
+	\begin{tabular}{|l||p{1.65cm}|p{1.45cm}|p{1.65cm}|}
+		\hline
+		       & \textbf{Volkova} & \textbf{Plank} & \textbf{Query} \\
+		\hline
+		users  & 4,620            & 1,391           & 6,610          \\
+		tweets & 12,226,859       & 3,568,265       & 16,788,612     \\
+		\hline
+		female & 32,367           & 10,613          & 61,736         \\
+		male   & 26,708           & 6,739           & 32,900         \\
+		\hline
+		train  & 47,298           & 13,827          & 75,918         \\
+		test   & 11,777           & 3,525           & 18,718         \\
+		\hline
+	\end{tabular}
+	\caption{Various metrics of the Twitter corpora annotated with gender used in
+		this research. The train and test sizes reflect the amount of batches
+	of 200 tweets.}
+	\label{tab:dat}
+\end{table}
+
+\section{Experiment}
+
+\begin{table*}
+	\centering
+
+	\begin{tabular}{llll|l|l|l|}
+
+		\cline{5-7}
+		& & & &  \multicolumn{3}{c|}{Train} \\
+		\cline{3-7}
+
+
+		                                      &                               & \multicolumn{1}{|l|}{\textbf{Majority}} &	\multicolumn{1}{|l|}{\textbf{Lexicon}}	& \textbf{Volkova}      & \textbf{Plank} & \textbf{Query}        \\
+
+
+		\cline{2-7}
+		                                      & \multicolumn{1}{|l|}{Volkova} & .556                                    &	\multicolumn{1}{|l|}{.796}             & \textbf{.822} (0.001) & .701 (0.007)    & .771  (0.007)         \\
+		\multirow{1}{*}{\rotatebox{90}{Test}} & \multicolumn{1}{|l|}{Plank}   & .659                                    &	\multicolumn{1}{|l|}{.740}             & \textbf{.741} (0.005)          & .723 (0.003)    & .724  (0.009)         \\
+		                                      & \multicolumn{1}{|l|}{Query}   & .674                                    &	\multicolumn{1}{|l|}{.668}             & .730  (0.007)         & .689 (0.005)    & \textbf{.756} (0.002) \\
+		\cline{2-7}
+		                                      & \multicolumn{1}{|l|}{Average} & .630                                    &	\multicolumn{1}{|l|}{.735}             & .764                  & .704            & .750                  \\
+		\cline{2-7}
+	\end{tabular}
+	\caption{Individual accuracy scores and averages for majority baseline (Majority), the lexicon of
+	  \newcite{sap2014}, and the three models
+		(trained on Volkova, Plank, and our dataset respectively) evaluated
+		on the test set for each corpus. Standard deviation is reported after repeating the
+		same experiment 20 times.}
+	\label{tab:res}
+\end{table*}
+
+For document classification, {\tt fastText}\footnote{\url{https://github.com/facebookresearch/fastText}} \cite{joulin2016bag}
+was employed; a simple linear model with one hidden embedding layer that
+learns sentence representations using bag of words or $n$-gram input, producing
+a probability distribution over the given classes using the softmax function.
+It therefore follows the same architecture as the continuous bag of words
+model from \newcite{mikolov2013}, replacing the middle word with a label.
+\newcite{joulin2016bag} demonstrate the model performs well on both sentiment and
+tag prediction tasks, significantly speeding up training and test time
+compared to several recent models.
+
+Gender predictions were made using a typical set of
+$n$-gram features as input; token uni-grams and bi-grams, and character
+tri-grams. We incorporate only those grams that occur more than three
+times during training. As the corpora are quite small, we use embeddings with
+only 30 dimensions, a learning rate of 0.1, and a
+bucket size of 1M. All models are trained for 10 epochs. Given that
+{\tt fastText} uses Hogwild \cite{recht2011} for parallelising Stochastic
+Gradient Descent, randomness in the vector representations cannot be controlled
+using a seed. To estimate the standard deviation in the results, we ran each
+experiment 20 times. To evaluate how our distantly supervised model compares
+to using manual annotations, we trained all models in this same configuration
+for all three corpora. Each model was then evaluated on the test set for each
+corpus.
+
+\section{Results}
+
+Table~\ref{tab:res} shows accuracy scores for this 3x3 experimental design, as
+well as a majority baseline score (always predicting female), and an average
+over the three test sets for each model. We closely reproduced the results
+from \newcite{volkova2016}; despite the difference in user\footnote{We
+could only retrieve 4,620 of the reported 4,998.} and tweet samples, exact
+split order, and their use of more features including style and part-of-speech
+tags, our performance approaches their reported .84 accuracy score.
+\newcite{plank2015} do not provide classification results for gender on their
+data. For comparison to state-of-the-art gender classification for English, the
+lexicon of \newcite{sap2014} is included in the results. Their work also
+compares with \newcite{volkova2014}, and reports a higher
+score (.90) for their random sample setup than reproduced in our batch
+evaluation (.80).
+
+Despite the fact that the model trained on the Volkova corpus performs best on
+both annotated corpora (Volkova and Plank), the
+difference is fairly small compared to our distantly supervised model --- the
+latter of which somewhat expectedly performs best on its associated test set.
+On average, the Query and Volkova trained models only differ .014 in accuracy
+score, and the Query model outperforms the lexicon approach by .015. However,
+the more significant comparison is the out of sample performance for these two
+models and the lexicon model on the Plank test set. Here, results are comparable
+between Query and Volkova, with a .017 difference, and higher standard deviation.
+However, here the lexicon approach outperforms the Query model with .016. Not only
+does this show our distant labels to be be comparable with hand labels, our
+models also seems to yield favourable performance over state of the art.
+
+\section{Conclusion}
+
+We use simple queries for self-reports to train a gender classifier for Twitter
+that has competitive performance to those trained on costly hand-annotated
+labels --- showing minimal differences. These should be
+considered in light of the manual effort put into gathering the annotations,
+however.
+Labelling Twitter users with our set of queries yields up to 45,000 hits per
+15 minutes (API rate limits
+considered), and therefore finishes in several minutes. Retrieving the
+timelines for the initial 19,307 users took roughly 21 hours. Including
+preprocessing (3 hours) and running {\tt fastText} (a few minutes) the entire
+pipeline is encouragingly cheap, even considering time, and can feasibly be
+repeated on a weekly basis.
+
+Hence, through manual analysis, as well as experimental evidence, we demonstrate
+our distantly supervised method to be a reliable and cheap alternative.
+Moreover, we pose several ways of
+improving this method by extending the queries, and further fine-tuning the
+applied filters and rules for a correct interpretation of the reports. By
+altering the queries to match other types of self-reports, it offers
+the possibility of quickly exploring its effectiveness for inferring other
+user attributes with little effort. We hope to facilitate this for the research
+community by providing our implementation. Our further work will focus on
+intelligently expanding the queries and evaluating this method on a larger
+scale with more attributes.
+
+\bibliography{emnlp2017}
+\bibliographystyle{emnlp_natbib}
+
+\end{document}
+
