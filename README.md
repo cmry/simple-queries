@@ -16,7 +16,7 @@ If you use anything in our repository, please cite the following work:
 ```
 
 Also consider citing the corpora that we used to compare when using the readers
-supplied with our work. See the [docs]() for references.
+supplied with our work. See the [docstrings](https://github.com/cmry/simple-queries/blob/master/sec3_data.py#L410) for references.
 
 ## Overview
 
