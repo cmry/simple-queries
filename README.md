@@ -20,12 +20,12 @@ supplied with our work. See the [docs]() for references.
 
 ## Overview
 
-- [tl;dr]()
-- [Quick Start]()
-  - [Reproduction]()
-  - [Build your Own Classifier]()
-- [Dependencies]()
-- [Paper Data]()
+- [tl;dr](https://github.com/cmry/simple-queries#tldr)
+- [Quick Start](https://github.com/cmry/simple-queries#quick-start)
+  - [Reproduction](https://github.com/cmry/simple-queries#reproduction)
+  - [Build your Own Classifier](https://github.com/cmry/simple-queries#build-your-own-gender-classifier)
+- [Dependencies](https://github.com/cmry/simple-queries#dependencies)
+- [Paper Data](https://github.com/cmry/simple-queries#paper-data)
 
 ## tl;dr
 
