@@ -9,8 +9,9 @@ If you use anything in our repository, please cite the following work:
 ```
 @inproceedings{emmery2017simple,
   title={Simple Queries as Distant Labels for Predicting Gender on Twitter},
-  author={Emmery, Chris and Chrupa\l{}a, Grzegorz and Daelemans, Walter},
-  booktitle={3d Workshop on Noisy User-generated Text (W-NUT 2017)},
+  author={Emmery, Chris and Chrupa{\l}a, Grzegorz and Daelemans, Walter},
+  booktitle={Proceedings of the 3rd Workshop on Noisy User-generated Text},
+  pages={50--55},
   year={2017}
 }
 ```
