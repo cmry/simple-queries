@@ -1,5 +1,5 @@
 Repository for the work described in [Simple Queries as Distant Labels for
-Predicting Gender on Twitter](http://noisy-text.github.io/2017/pdf/WNUT07.pdf),
+Predicting Gender on Twitter](http://www.aclweb.org/anthology/W17-4407),
 presented at [W-NUT 2017](http://noisy-text.github.io/2017/index.html).
 
 The code is released under the MIT license, the data under [CC-BY-SA-4.0](https://creativecommons.org/licenses/by-sa/4.0/).
